@@ -33,9 +33,13 @@ def create_django_model(request, db_name, app_label, model_name):
         return JSONResponse(res, status=e.status_code)
 
 
-@require_http_methods(['GET'])
+@require_http_methods(['GET', 'POST'])
 @read_auth_decorator
 def read_django_model(request, db_name, app_label, model_name, pk=None):
+    """
+    To prevent GET parameter length issues, switch to POST requests
+    passing the model filter dictionary in the request body.
+    """
     try:
         if pk:
             params = {
@@ -44,8 +48,7 @@ def read_django_model(request, db_name, app_label, model_name, pk=None):
                 }
             }
         else:
-            params = request.GET.get('payload', None)
-            params = json.loads(params)
+            params = get_json_request_body(request.body)
         mb = ModelBuilder(db_name, app_label, model_name, params)
         qset = mb.queryset()  # get the result based on the given parameters
         res = {'data': qset, 'message': '', 'success': True}

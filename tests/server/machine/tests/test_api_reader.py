@@ -36,6 +36,12 @@ class TestAPIReader(TestCase):
             url_kwargs['pk'] = pk
         return url_reverse(url_name, kwargs=url_kwargs)
 
+    def send_post_request(self, url, params):
+        return self.client.post(url,
+                                json.dumps({"payload": params}),
+                                content_type='application/json'
+                                )
+
     def test_get_machine(self):
         self.params = {
             'filter': {
@@ -43,8 +49,7 @@ class TestAPIReader(TestCase):
             },
             'fields': ['ip', 'name', 'created_at', 'stats', 'os__name']
         }
-        resp = self.client.get(
-            self.getURL(), {'payload': json.dumps(self.params)})
+        resp = self.send_post_request(self.getURL(), self.params)
         self.assertEqual(resp.status_code, 200)
         resp_json = resp.json()
         self.assertEqual(resp_json['data'][0]['ip'], "10.0.0.1")
@@ -70,8 +75,8 @@ class TestAPIReader(TestCase):
             },
             'fields': ['arch', 'full_name']
         }
-        resp = self.client.get(self.getURL(model_name='OperatingSystem'), {
-                               'payload': json.dumps(self.params)})
+        resp = self.send_post_request(self.getURL(model_name='OperatingSystem'),
+                                      self.params)
         self.assertEqual(resp.status_code, 200)
         resp_json = resp.json()
         self.assertEqual(resp_json['data'][0]['arch'], "arch-name-1")
@@ -83,9 +88,7 @@ class TestAPIReader(TestCase):
             },
             'fields': ['stats']
         }
-        resp = self.client.get(
-            self.getURL(), {'payload': json.dumps(self.params)})
-        self.assertEqual(resp.status_code, 200)
+        resp = self.send_post_request(self.getURL(), self.params)
         resp_json = resp.json()
         self.assertEqual(resp_json['data'][0]['stats'], "CPU: 2, Mem 1GB")
 
@@ -95,8 +98,7 @@ class TestAPIReader(TestCase):
                 'name': 'machine-name-1'
             }
         }
-        resp = self.client.get(
-            self.getURL(), {'payload': json.dumps(self.params)})
+        resp = self.send_post_request(self.getURL(), self.params)
         self.assertEqual(resp.status_code, 200)
 
     def test_or_query(self):
@@ -110,8 +112,7 @@ class TestAPIReader(TestCase):
             },
             'fields': ['ip']
         }
-        resp = self.client.get(
-            self.getURL(), {'payload': json.dumps(self.params)})
+        resp = self.send_post_request(self.getURL(), self.params)
         self.assertEqual(resp.status_code, 200)
         resp_json = resp.json()
         # matching results are machine-name-2, machine-name-1
@@ -127,8 +128,7 @@ class TestAPIReader(TestCase):
                 'name': 'machine-name-11'
             }
         }
-        resp = self.client.get(
-            self.getURL(), {'payload': json.dumps(self.params)})
+        resp = self.send_post_request(self.getURL(), self.params)
         self.assertEqual(resp.status_code, 200)
         res_json = resp.json()
         self.assertEqual(9, len(res_json['data']))
@@ -141,8 +141,7 @@ class TestAPIReader(TestCase):
             'fields': ['os__name'],
             'distinct': True
         }
-        resp = self.client.get(
-            self.getURL(), {'payload': json.dumps(self.params)})
+        resp = self.send_post_request(self.getURL(), self.params)
         self.assertEqual(resp.status_code, 200)
         res_json = resp.json()
         self.assertEqual(10, len(res_json['data']))
@@ -154,8 +153,7 @@ class TestAPIReader(TestCase):
             },
             'count': True
         }
-        resp = self.client.get(
-            self.getURL(), {'payload': json.dumps(self.params)})
+        resp = self.send_post_request(self.getURL(), self.params)
         self.assertEqual(resp.status_code, 200)
         res_json = resp.json()
         self.assertEqual(10, res_json['data'])
@@ -168,8 +166,7 @@ class TestAPIReader(TestCase):
             'fields': ['name'],
             'count': False
         }
-        resp = self.client.get(
-            self.getURL(), {'payload': json.dumps(self.params)})
+        resp = self.send_post_request(self.getURL(), self.params)
         self.assertEqual(resp.status_code, 200)
         res_json = resp.json()
         self.assertEqual(10, len(res_json['data']))
@@ -183,8 +180,7 @@ class TestAPIReader(TestCase):
             'distinct': True,
             'count': True
         }
-        resp = self.client.get(
-            self.getURL(), {'payload': json.dumps(self.params)})
+        resp = self.send_post_request(self.getURL(), self.params)
         self.assertEqual(resp.status_code, 200)
         res_json = resp.json()
         self.assertEqual(8, res_json['data'])
@@ -199,8 +195,7 @@ class TestAPIReader(TestCase):
             'limit': 2,
             'offset': 3
         }
-        resp = self.client.get(
-            self.getURL(), {'payload': json.dumps(self.params)})
+        resp = self.send_post_request(self.getURL(), self.params)
         self.assertEqual(resp.status_code, 200)
         res_json = resp.json()
         result = [
@@ -217,8 +212,7 @@ class TestAPIReader(TestCase):
             },
             'fields': ['id', 'ip', 'created_at']
         }
-        resp = self.client.get(
-            self.getURL(), {'payload': json.dumps(self.params)})
+        resp = self.send_post_request(self.getURL(), self.params)
         self.assertEqual(resp.status_code, 200)
         res_json = resp.json()
         self.assertEqual(83, len(res_json['data']))
@@ -231,11 +225,22 @@ class TestAPIReader(TestCase):
             },
             'fields': ['os__name', 'pk']
         }
-        resp = self.client.get(
-            self.getURL(), {'payload': json.dumps(self.params)})
+        resp = self.send_post_request(self.getURL(), self.params)
         self.assertEqual(resp.status_code, 200)
         res_json = resp.json()
         self.assertEqual(1, len(res_json['data']))
+
+    def test_in_query(self):
+        self.params = {
+            'filter': {
+                'pk__in': list(range(2048)),
+            },
+            'fields': ['os__name', 'pk']
+        }
+        resp = self.send_post_request(self.getURL(), self.params)
+        self.assertEqual(resp.status_code, 200)
+        res_json = resp.json()
+        self.assertEqual(100, len(res_json['data']))
 
     def test_if_data_loaded(self):
         """
@@ -261,8 +266,7 @@ class TestAPIReader(TestCase):
             },
             'fields': ['invalid']
         }
-        resp = self.client.get(
-            self.getURL(), {'payload': json.dumps(self.params)})
+        resp = self.send_post_request(self.getURL(), self.params)
         self.assertEqual(resp.status_code, 400)
         resp_json = resp.json()
         self.assertFalse(resp_json['success'])
@@ -274,8 +278,8 @@ class TestAPIReader(TestCase):
             },
             'fields': ['username', 'last_login'],
         }
-        resp = self.client.get(self.getURL(app_label='auth', model_name='User'), {
-                               'payload': json.dumps(self.params)})
+        resp = self.send_post_request(self.getURL(app_label='auth', model_name='User'),
+                                      self.params)
         self.assertEqual(resp.status_code, 403)
         self.assertFalse(resp.json()['success'])
 
@@ -286,8 +290,8 @@ class TestAPIReader(TestCase):
             },
             'fields': ['name', 'license_key'],
         }
-        resp = self.client.get(self.getURL(model_name='OperatingSystem'), {
-                               'payload': json.dumps(self.params)})
+        resp = self.send_post_request(self.getURL(model_name='OperatingSystem'),
+                                      self.params)
         self.assertEqual(resp.status_code, 403)
         self.assertFalse(resp.json()['success'])
 
@@ -298,8 +302,7 @@ class TestAPIReader(TestCase):
             },
             'fields': ['os__license_key', 'name'],
         }
-        resp = self.client.get(
-            self.getURL(), {'payload': json.dumps(self.params)})
+        resp = self.send_post_request(self.getURL(), self.params)
         self.assertEqual(resp.status_code, 403)
         self.assertFalse(resp.json()['success'])
 
@@ -310,8 +313,8 @@ class TestAPIReader(TestCase):
             },
             'fields': ['name', 'arch'],
         }
-        resp = self.client.get(self.getURL(model_name='OperatingSystem'), {
-                               'payload': json.dumps(self.params)})
+        resp = self.send_post_request(self.getURL(model_name='OperatingSystem'),
+                                      self.params)
         self.assertEqual(resp.status_code, 200)
         self.assertTrue(resp.json()['success'])
 
@@ -322,8 +325,8 @@ class TestAPIReader(TestCase):
             },
             'fields': ['name', 'arch'],
         }
-        resp = self.client.get(self.getURL(model_name='InvalidModel'), {
-                               'payload': json.dumps(self.params)})
+        resp = self.send_post_request(self.getURL(model_name='InvalidModel'),
+                                      self.params)
         self.assertEqual(resp.status_code, 400)
         self.assertFalse(resp.json()['success'])
 
@@ -334,8 +337,10 @@ class TestAPIReader(TestCase):
             },
             'fields': ['name', 'arch'],
         }
-        resp = self.client.get(self.getURL(app_label='InvalidApp'), {
-                               'payload': json.dumps(self.params)})
+        resp = self.send_post_request(
+            self.getURL(
+                app_label='InvalidApp'),
+            self.params)
         self.assertEqual(resp.status_code, 400)
         self.assertFalse(resp.json()['success'])
 
@@ -346,8 +351,7 @@ class TestAPIReader(TestCase):
             },
             'fields': ['name', 'os__arch'],
         }
-        resp = self.client.get(
-            self.getURL(), {'payload': json.dumps(self.params)})
+        resp = self.send_post_request(self.getURL(), self.params)
         self.assertEqual(resp.status_code, 200)
 
     def test_invalid_query_type(self):
@@ -358,8 +362,7 @@ class TestAPIReader(TestCase):
             'fields': ['name', 'os__arch'],
             'count': 'yes_invalid'
         }
-        resp = self.client.get(
-            self.getURL(), {'payload': json.dumps(self.params)})
+        resp = self.send_post_request(self.getURL(), self.params)
         self.assertEqual(resp.status_code, 400)
         self.assertFalse(resp.json()['success'])
 
@@ -370,8 +373,7 @@ class TestAPIReader(TestCase):
                 'Avg': 'memory'
             }
         }
-        resp = self.client.get(
-            self.getURL(), {'payload': json.dumps(self.params)})
+        resp = self.send_post_request(self.getURL(), self.params)
         self.assertEqual(resp.status_code, 200)
         resp_json = resp.json()
         self.assertEqual(14, resp_json['data']['cpu_count__max'])
@@ -386,8 +388,7 @@ class TestAPIReader(TestCase):
             },
             'count': True
         }
-        resp = self.client.get(
-            self.getURL(), {'payload': json.dumps(self.params)})
+        resp = self.send_post_request(self.getURL(), self.params)
         self.assertEqual(resp.status_code, 200)
         resp_json = resp.json()
         self.assertEqual(14, resp_json['data']['cpu_count__max'])
@@ -400,8 +401,7 @@ class TestAPIReader(TestCase):
                 'Mix': 'cpu_count',
             }
         }
-        resp = self.client.get(
-            self.getURL(), {'payload': json.dumps(self.params)})
+        resp = self.send_post_request(self.getURL(), self.params)
         self.assertEqual(resp.status_code, 400)
         resp_json = resp.json()
         self.assertFalse(resp_json['success'])
@@ -416,7 +416,6 @@ class TestAPIReader(TestCase):
             },
             'fields': ['name', 'os__arch']
         }
-        resp = self.client.get(
-            self.getURL(), {'payload': json.dumps(self.params)})
+        resp = self.send_post_request(self.getURL(), self.params)
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(4, len(resp.json()['data']))

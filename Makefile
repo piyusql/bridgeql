@@ -10,9 +10,14 @@ VENV_DIR := $(PROJECT_ROOT)/venv
 PYTHONPATH := $(VENV_DIR)/lib/$(PY_VERSION)/site-packages
 COVERAGE := $(VENV_DIR)/bin/coverage
 
-default: install
+default: help
 
-test: install
+help: ## Show this help
+	@printf 'Usage: make <target>\n\n'
+	@grep -E '^[a-zA-Z_-]+:.*##' $(MAKEFILE_LIST) \
+	  | awk -F':.*## *' '{printf "%-20s %s\n", $$1, $$2}'
+
+test: install  ## run all the test cases to get coverage
 	@echo "\nRunning the UnitTestCases with coverage enabled"
 	@echo "--------------------------------------------------"
 	@source env.sh && \
@@ -20,7 +25,7 @@ test: install
 		$(COVERAGE) run --source="../../bridgeql" manage.py test -v2 && \
 		$(COVERAGE) report
 
-install: $(VENV_DIR)
+install: $(VENV_DIR)  ## setup environment to run bridgeql
 	@echo "\nInstalling all required packages"
 	@echo "--------------------------------------------------"
 	$(VENV_DIR)/bin/pip install -r requirements.txt
@@ -33,7 +38,7 @@ $(VENV_DIR):
 	@echo "--------------------------------------------------"
 	$(VENV_DIR)/bin/pip install --upgrade pip
 
-autopep8: install
+lint: install  ## fix lint issues
 	@echo "\nChecking with python PEP8 compliance"
 	@echo "--------------------------------------------------"
 	@source env.sh && autopep8 --in-place --exclude=venv,.tox -r .

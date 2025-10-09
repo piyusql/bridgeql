@@ -86,7 +86,9 @@ class TestAPIWriter(TestCase):
             'app_label': 'machine',
             'model_name': 'Machine'
         })
-        resp = self.client.get(url, {"payload": json.dumps(params2)})
+        resp = self.client.post(url,
+                                json.dumps({"payload": params2}),
+                                content_type='application/json')
         self.assertDictEqual(params1, resp.json()['data'][0])
 
     def test_update_machine_invalid_pk(self):
