@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: BSD-2-Clause
 
 
-class Field(object):
+class Field:
     def __init__(self, model_config, field_name):
         self.model_config = model_config
         self.name = field_name
@@ -18,7 +18,7 @@ class Field(object):
         return self.name in self.model_config.restricted_fields
 
 
-class FieldAttributes(object):
+class FieldAttributes:
 
     def __init__(self, name, is_null, field_type, help_text):
         self.field_name = name

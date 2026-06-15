@@ -19,12 +19,12 @@ class JSONEncoder(json.JSONEncoder):
     Encode an object in JSON.
     """
 
-    def default(self, obj):
-        if isinstance(obj, datetime):
-            return obj.ctime()
-        if hasattr(obj, '__json__'):
-            return obj.__json__()
-        return json.JSONEncoder.default(self, obj)
+    def default(self, o):
+        if isinstance(o, datetime):
+            return o.ctime()
+        if hasattr(o, '__json__'):
+            return o.__json__()
+        return json.JSONEncoder.default(self, o)
 
 
 class JSONResponse(HttpResponse):
@@ -62,9 +62,16 @@ def get_allowed_apps():
     return bridgeql_settings.BRIDGEQL_ALLOWED_APPS or get_local_apps()
 
 
-def get_json_request_body(body):
+def get_json_request_body(request):
+    # Reject requests whose Content-Type is not application/json.
+    # HTML forms cannot set this header, which closes the residual
+    # CSRF attack surface that remains even with @csrf_exempt.
+    content_type = request.META.get('CONTENT_TYPE', '')
+    if 'application/json' not in content_type:
+        raise InvalidRequest(
+            'Content-Type must be application/json, got: %s' % content_type)
     try:
-        params = json.loads(body)
+        params = json.loads(request.body)
         payload = params.get('payload', None)
         if payload is None:
             raise InvalidRequest('payload is not present in request body')
@@ -73,4 +80,4 @@ def get_json_request_body(body):
                 'Incorrect payload type, Expected dict, got %s' % type(payload))
         return payload
     except ValueError as e:
-        raise InvalidRequest(str(e))
+        raise InvalidRequest(str(e)) from e

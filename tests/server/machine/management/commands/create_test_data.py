@@ -24,12 +24,12 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         scale = options['scale']
         for i in range(10 * scale):
-            os = OperatingSystem.objects.create(
+            OperatingSystem.objects.create(
                 name="os-name-%d" % (i+1),
                 arch="arch-name-%d" % (i+1)
             )
         for i in range(100 * scale):
-            machine = Machine.objects.create(
+            Machine.objects.create(
                 ip="10.0.0.%d" % (i+1),
                 name="machine-name-%d" % (i+1),
                 cpu_count=((i+1) % 8)*2,

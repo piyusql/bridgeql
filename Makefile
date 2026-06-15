@@ -4,15 +4,20 @@
 
 # Utility Makefile to build, clean and test
 PROJECT_ROOT := $(shell pwd)
-PY_VERSION := "python3.9"
+PY_VERSION := "python3.12"
 PY_BINARY := $(shell which $(PY_VERSION))
 VENV_DIR := $(PROJECT_ROOT)/venv
 PYTHONPATH := $(VENV_DIR)/lib/$(PY_VERSION)/site-packages
 COVERAGE := $(VENV_DIR)/bin/coverage
 
-default: install
+default: help
 
-test: install
+help: ## Show this help
+	@printf 'Usage: make <target>\n\n'
+	@grep -E '^[a-zA-Z_-]+:.*##' $(MAKEFILE_LIST) \
+	  | awk -F':.*## *' '{printf "%-20s %s\n", $$1, $$2}'
+
+test: install  ## run all the test cases to get coverage
 	@echo "\nRunning the UnitTestCases with coverage enabled"
 	@echo "--------------------------------------------------"
 	@source env.sh && \
@@ -20,7 +25,7 @@ test: install
 		$(COVERAGE) run --source="../../bridgeql" manage.py test -v2 && \
 		$(COVERAGE) report
 
-install: $(VENV_DIR)
+install: $(VENV_DIR)  ## setup environment to run bridgeql
 	@echo "\nInstalling all required packages"
 	@echo "--------------------------------------------------"
 	$(VENV_DIR)/bin/pip install -r requirements.txt
@@ -33,12 +38,22 @@ $(VENV_DIR):
 	@echo "--------------------------------------------------"
 	$(VENV_DIR)/bin/pip install --upgrade pip
 
-autopep8: install
+lint: install  ## fix lint issues
 	@echo "\nChecking with python PEP8 compliance"
 	@echo "--------------------------------------------------"
 	@source env.sh && autopep8 --in-place --exclude=venv,.tox -r .
 
-clean:
-	rm -rf $(VENV_DIR)
+dist: install  ## build source and wheel distributions for PyPI upload
+	@echo "\nCleaning previous build artifacts ..."
+	@echo "--------------------------------------------------"
+	rm -rf dist/ *.egg-info
+	@echo "\nBuilding source tarball and wheel ..."
+	@echo "--------------------------------------------------"
+	$(VENV_DIR)/bin/python -m build
+	@echo "\nArtifacts ready in dist/ — upload manually with:"
+	@echo "  twine upload dist/*"
 
-.PHONY: clean
+clean:  ## remove virtualenv and all build artifacts
+	rm -rf $(VENV_DIR) dist/ *.egg-info
+
+.PHONY: help install test lint dist clean

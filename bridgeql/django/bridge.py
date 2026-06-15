@@ -2,13 +2,11 @@
 # Copyright © 2023 VMware, Inc.  All rights reserved.
 # SPDX-License-Identifier: BSD-2-Clause
 
-import json
-
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 
 from bridgeql.django.auth import read_auth_decorator, write_auth_decorator
-from bridgeql.django.exceptions import BridgeqlException
+from bridgeql.django.exceptions import BridgeqlException, InvalidRequest
 from bridgeql.django.helpers import JSONResponse, get_json_request_body
 from bridgeql.django.models import ModelBuilder, ModelObject
 
@@ -18,7 +16,7 @@ from bridgeql.django.models import ModelBuilder, ModelObject
 @write_auth_decorator
 def create_django_model(request, db_name, app_label, model_name):
     try:
-        params = get_json_request_body(request.body)
+        params = get_json_request_body(request)
         mo = ModelObject(app_label, model_name, db_name)
         obj = mo.create(params)
         msg = 'Added new object of %s with pk=%s' % (
@@ -33,21 +31,32 @@ def create_django_model(request, db_name, app_label, model_name):
         return JSONResponse(res, status=e.status_code)
 
 
-@require_http_methods(['GET'])
+@csrf_exempt
+@require_http_methods(['GET', 'POST'])
 @read_auth_decorator
 def read_django_model(request, db_name, app_label, model_name, pk=None):
+    """
+    GET  /read/<db>/<app>/<model>/<pk>/  — look up a single object by pk.
+    POST /read/<db>/<app>/<model>/       — filter using a JSON payload in the
+                                           request body to avoid URL-length limits.
+    Any other combination returns HTTP 400.
+    """
     try:
-        if pk:
+        if pk and request.method == 'GET':
             params = {
                 'filter': {
                     'pk': pk
                 }
             }
+        elif not pk and request.method == 'POST':
+            params = get_json_request_body(request)
         else:
-            params = request.GET.get('payload', None)
-            params = json.loads(params)
+            raise InvalidRequest(
+                'GET requests require a pk in the URL; '
+                'POST requests require a JSON payload in the request body'
+            )
         mb = ModelBuilder(db_name, app_label, model_name, params)
-        qset = mb.queryset()  # get the result based on the given parameters
+        qset = mb.queryset()
         res = {'data': qset, 'message': '', 'success': True}
         return JSONResponse(res)
     except BridgeqlException as e:
@@ -62,7 +71,7 @@ def read_django_model(request, db_name, app_label, model_name, pk=None):
 @write_auth_decorator
 def update_django_model(request, db_name, app_label, model_name, pk):
     try:
-        params = get_json_request_body(request.body)
+        params = get_json_request_body(request)
         mo = ModelObject(app_label, model_name, db_name, pk=pk)
         obj = mo.update(params)
         msg = 'Updated %s with pk=%s, fields=%s' % (
@@ -80,7 +89,7 @@ def update_django_model(request, db_name, app_label, model_name, pk):
 @csrf_exempt
 @require_http_methods(['DELETE'])
 @write_auth_decorator
-def delete_django_model(request, db_name, app_label, model_name, pk):
+def delete_django_model(_request, db_name, app_label, model_name, pk):
     try:
         mo = ModelObject(app_label, model_name, db_name, pk=pk)
         obj = mo.delete()

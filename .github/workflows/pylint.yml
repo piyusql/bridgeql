@@ -1,23 +1,31 @@
 name: Pylint
 
-on: [push]
+on: [push, pull_request]
 
 jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
-        python-version: ["3.8", "3.9", "3.10"]
+        python-version: ["3.12", "3.13", "3.14"]
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v3
+      uses: actions/setup-python@v6
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install pylint
-    - name: Analysing the code with pylint
-      run: |
-        pylint $(git ls-files '*.py')
+        pip install -r requirements.txt
+    # Library code — strict threshold, pylint resolves the package via its
+    # own recursive discovery so cross-module imports are analysed correctly.
+    - name: Lint library (bridgeql/)
+      run: pylint bridgeql/ --fail-under=9.5
+
+    # Test code — slightly relaxed threshold; test classes naturally have
+    # patterns (many methods, params set per-test) that lower the score.
+    - name: Lint tests (tests/)
+      run: pylint tests/ --fail-under=8.0

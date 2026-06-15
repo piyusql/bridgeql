@@ -7,7 +7,7 @@ from django.db.models import Q
 from bridgeql.django.exceptions import InvalidQueryException
 
 
-class Query(object):
+class Query:
 
     def __init__(self, query_dict):
         self.query_dict = query_dict

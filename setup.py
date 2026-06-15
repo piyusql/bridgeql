@@ -8,7 +8,8 @@ import setuptools
 
 
 def read(f):
-    return open(f, 'r').read()
+    with open(f, 'r', encoding='utf-8') as fh:
+        return fh.read()
 
 
 def get_version(package):
@@ -33,25 +34,24 @@ setuptools.setup(
     project_urls={
         "Bug Tracker": "https://github.com/vmware/bridgeql/issues"
     },
-    classifiers={
+    classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: BSD License",
         "Natural Language :: English",
         "Operating System :: OS Independent",
         "Framework :: Django",
-        "Framework :: Django :: 1.11",
-        "Framework :: Django :: 2.2",
-        "Framework :: Django :: 3.2",
-        "Framework :: Django :: 4.1",
+        "Framework :: Django :: 4.2",
+        "Framework :: Django :: 5.0",
+        "Framework :: Django :: 5.1",
         "Programming Language :: Python",
-        "Programming Language :: Python :: 2.7",
-        "Programming Language :: Python :: 3.7",
-        "Programming Language :: Python :: 3.8",
-        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.12",
+        "Programming Language :: Python :: 3.13",
+        "Programming Language :: Python :: 3.14",
         "Topic :: Software Development :: Libraries :: Python Modules",
-    },
+    ],
     packages=setuptools.find_packages(exclude=['tests*']),
     package_data={'': ['templates/**/*.html']},
-    python_requires=">=2.7"
+    python_requires=">=3.12"
 )
