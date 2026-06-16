@@ -39,6 +39,7 @@ class TestAPIWriter(TestCase):
             content_type='application/json'
         )
         self.assertEqual(resp.status_code, 201)
+        self.assertTrue(resp.json()['success'])
 
     # Validation error since NOT NULL fields are not passed
     def test_create_machine_missing_fields(self):
@@ -55,6 +56,7 @@ class TestAPIWriter(TestCase):
             content_type='application/json'
         )
         self.assertEqual(resp.status_code, 400)
+        self.assertFalse(resp.json()['success'])
 
     def test_update_machine(self):
         machine_object_pk = 10
@@ -69,7 +71,6 @@ class TestAPIWriter(TestCase):
                    }
         resp = self.client.patch(
             url, json.dumps({"payload": params1}), content_type='application/json')
-        # self.assertEqual(resp.json()['message'], '')
         self.assertEqual(resp.status_code, 200)
         self.assertTrue(resp.json()['success'])
         # test if the machine table with pk updated successfully
@@ -89,6 +90,8 @@ class TestAPIWriter(TestCase):
         resp = self.client.post(url,
                                 json.dumps({"payload": params2}),
                                 content_type='application/json')
+        self.assertEqual(resp.status_code, 200)
+        self.assertTrue(resp.json()['success'])
         self.assertDictEqual(params1, resp.json()['data'][0])
 
     def test_update_machine_invalid_pk(self):
@@ -184,8 +187,11 @@ class TestAPIWriter(TestCase):
             'app_label': 'machine',
             'model_name': 'Machine'
         })
-        resp = self.client.get(url, {"payload": json.dumps(params2)})
+        resp = self.client.post(url, json.dumps({"payload": params2}),
+                                content_type='application/json')
+        self.assertEqual(resp.status_code, 200)
         self.assertListEqual([], resp.json()['data'])
+        self.assertTrue(resp.json()['success'])
 
     def test_invalid_write_connection(self):
         url = reverse('bridgeql_django_delete', kwargs={

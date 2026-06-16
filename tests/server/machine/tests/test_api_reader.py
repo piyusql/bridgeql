@@ -89,7 +89,9 @@ class TestAPIReader(TestCase):
             'fields': ['stats']
         }
         resp = self.send_post_request(self.getURL(), self.params)
+        self.assertEqual(resp.status_code, 200)
         resp_json = resp.json()
+        self.assertTrue(resp_json['success'])
         self.assertEqual(resp_json['data'][0]['stats'], "CPU: 2, Mem 1GB")
 
     def test_empty_fields(self):
@@ -327,6 +329,43 @@ class TestAPIReader(TestCase):
         }
         resp = self.send_post_request(self.getURL(model_name='InvalidModel'),
                                       self.params)
+        self.assertEqual(resp.status_code, 400)
+        self.assertFalse(resp.json()['success'])
+
+    def test_wrong_content_type_returns_400(self):
+        resp = self.client.post(
+            self.getURL(),
+            '{"payload": {"filter": {}}}',
+            content_type='text/plain'
+        )
+        self.assertEqual(resp.status_code, 400)
+        self.assertFalse(resp.json()['success'])
+        self.assertIn('application/json', resp.json()['message'])
+
+    def test_missing_payload_key_returns_400(self):
+        resp = self.client.post(
+            self.getURL(),
+            json.dumps({"not_payload": {}}),
+            content_type='application/json'
+        )
+        self.assertEqual(resp.status_code, 400)
+        self.assertFalse(resp.json()['success'])
+
+    def test_payload_not_dict_returns_400(self):
+        resp = self.client.post(
+            self.getURL(),
+            json.dumps({"payload": [1, 2, 3]}),
+            content_type='application/json'
+        )
+        self.assertEqual(resp.status_code, 400)
+        self.assertFalse(resp.json()['success'])
+
+    def test_invalid_json_body_returns_400(self):
+        resp = self.client.post(
+            self.getURL(),
+            'this is not valid json',
+            content_type='application/json'
+        )
         self.assertEqual(resp.status_code, 400)
         self.assertFalse(resp.json()['success'])
 

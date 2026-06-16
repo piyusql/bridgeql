@@ -1,0 +1,11 @@
+# -*- coding: utf-8 -*-
+# Copyright © 2023 VMware, Inc.  All rights reserved.
+# SPDX-License-Identifier: BSD-2-Clause
+
+[report]
+fail_under = 90
+show_missing = True
+omit =
+    */migrations/*
+    venv/*
+    setup.py
