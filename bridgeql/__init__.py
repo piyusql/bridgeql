@@ -2,7 +2,7 @@
 # Copyright © 2023 VMware, Inc.  All rights reserved.
 # SPDX-License-Identifier: BSD-2-Clause
 
-"""
+r"""
   ____       _     _             ____  _
  |  _ \     (_)   | |           / __ \| |
  | |_) |_ __ _  __| | __ _  ___| |  | | |
@@ -14,7 +14,7 @@
 """
 
 __title__ = 'BridgeQL'
-__version__ = '0.2.2'
+__version__ = '0.4.0'
 __license__ = 'BSD 2-Clause'
 __copyright__ = 'Copyright © 2023 VMware, Inc.  All rights reserved.'
 

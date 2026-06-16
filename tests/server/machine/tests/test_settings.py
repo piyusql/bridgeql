@@ -5,12 +5,14 @@
 from django.test import TestCase, override_settings
 
 from bridgeql.django.exceptions import (
+    BridgeqlException,
     InvalidAppOrModelName,
     InvalidBridgeQLSettings,
     InvalidModelFieldName
 )
 from bridgeql.django.settings import bridgeql_settings
 from bridgeql.django.helpers import get_allowed_apps
+from bridgeql.types import DBRows
 
 
 class TestSettings(TestCase):
@@ -100,3 +102,15 @@ class TestSettings(TestCase):
 
     def test_list_local_apps(self):
         self.assertListEqual(get_allowed_apps(), ['machine'])
+
+    def test_exception_uses_default_detail_when_none(self):
+        exc = BridgeqlException()
+        self.assertEqual(str(exc), BridgeqlException.default_detail)
+
+    def test_dbrows_count(self):
+        rows = DBRows([1, 2, 3])
+        self.assertEqual(rows.count(), 3)
+
+    def test_dbrows_count_empty(self):
+        rows = DBRows()
+        self.assertEqual(rows.count(), 0)

@@ -86,9 +86,12 @@ params = {
 }
 # db_name could be default
 api_url = '<yoursite.com>/api/bridgeql/read/default/machine/Machine'
-resp = requests.get(api_url, {'payload': json.dumps(params)})
+resp = requests.post(api_url, {'payload': json.dumps(params)})
 result = resp.json()
 ```
+> For primary-key lookups, use GET (/api/bridgeql/read/db/app/model/{pk}/) with no query params.
+
+> For parameterized/complex searches, use POST (e.g., /api/bridgeql/read/db/app/model/) with a JSON body to carry long/nested filters and avoid URL/query-string length limits.
 
 The above parameters will translate into running the model query for `Machine` model of `machine` django app.
 

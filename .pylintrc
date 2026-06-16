@@ -1,0 +1,72 @@
+[MAIN]
+# Skip build scripts and generated directories by basename
+ignore = setup.py
+
+# Skip migration files and generated egg-info by path pattern
+ignore-paths = ^.*/migrations/.*$,
+               ^.*\.egg-info/.*$
+
+[MESSAGES CONTROL]
+disable =
+    # Docstrings — not yet adopted across the codebase
+    C0114, # missing-module-docstring
+    C0115, # missing-class-docstring
+    C0116, # missing-function-docstring
+
+    # Style preferences — team uses %-formatting throughout
+    C0209, # consider-using-f-string
+
+    # One-liner function defs in auth.py (intentional)
+    C0321, # multiple-statements
+
+    # Django _meta is the documented public API for model introspection
+    W0212, # protected-access
+
+    # TODO markers are intentional work items, not errors
+    W0511, # fixme
+
+    # False positive: pylint cannot infer the type returned by getattr()
+    E1102, # not-callable
+
+    # Data-transfer / config classes intentionally have few methods
+    R0903, # too-few-public-methods
+
+    # Test classes naturally accumulate many test methods
+    R0904, # too-many-public-methods
+
+    # Minor refactor suggestions — addressed separately
+    R1718, # consider-using-set-comprehension
+    R1734, # use-list-literal
+    R1723, # no-else-break
+
+    # Django ORM adds .objects at class creation time; pylint cannot see it
+    E1101, # no-member
+
+    # Test methods commonly set self.params per test rather than in __init__
+    W0201, # attribute-defined-outside-init
+
+    # raise X from e — pre-existing throughout codebase, addressed separately
+    W0707, # raise-missing-from
+
+    # manage.py uses Django's standard deferred import pattern
+    C0415, # import-outside-toplevel
+
+    # open() encoding: already fixed for production code
+    W1514, # unspecified-encoding
+
+    # Test helper naming (getURL, _checkListEqual) — pre-existing convention
+    C0103, # invalid-name
+
+    # _apply_opts has inherent complexity from the queryset option dispatch
+    R0912, # too-many-branches
+
+[FORMAT]
+max-line-length = 120
+
+[DESIGN]
+# Parameters class has many attributes by design
+max-attributes = 12
+
+[SIMILARITIES]
+# Ignore imports when checking for duplicate code
+ignore-imports = yes

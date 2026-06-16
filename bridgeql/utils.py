@@ -1,10 +1,11 @@
+# -*- coding: utf-8 -*-
+# Copyright © 2023 VMware, Inc.  All rights reserved.
+# SPDX-License-Identifier: BSD-2-Clause
+
 import base64
 import importlib
 import json
 import socket
-import sys
-
-PY_VERSION = sys.version_info.major
 
 
 def get_client_ip(request):
@@ -20,10 +21,9 @@ def local_ip_hostname():
     hostname = socket.getfqdn()
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     try:
-        # doesn't even have to be reachable
         s.connect(('192.255.255.255', 1))
         ip_address = s.getsockname()[0]
-    except:
+    except OSError:
         ip_address = '127.0.0.1'
     finally:
         s.close()
@@ -31,27 +31,19 @@ def local_ip_hostname():
 
 
 def b64encode(data):
-    if PY_VERSION >= 3:
-        return base64.b64encode(data.encode('utf-8'))
-    return base64.b64encode(data)
+    return base64.b64encode(data.encode('utf-8'))
 
 
 def b64decode(data):
-    if PY_VERSION >= 3:
-        return base64.b64decode(data).decode('utf-8')
-    return base64.b64decode(data)
+    return base64.b64decode(data).decode('utf-8')
 
 
 def b64encode_json(data):
-    if PY_VERSION >= 3:
-        return base64.b64encode(json.dumps(data).encode('utf-8'))
-    return base64.b64encode(json.dumps(data))
+    return base64.b64encode(json.dumps(data).encode('utf-8'))
 
 
 def b64decode_json(data):
-    if PY_VERSION >= 3:
-        return json.loads(base64.b64decode(data).decode('utf-8'))
-    return json.loads(base64.b64decode(data))
+    return json.loads(base64.b64decode(data).decode('utf-8'))
 
 
 def load_function(function_str):

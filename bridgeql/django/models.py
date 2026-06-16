@@ -33,7 +33,7 @@ from bridgeql.django.settings import bridgeql_settings
 from bridgeql.types import DBRows
 
 
-class Parameters(object):
+class Parameters:
     def __init__(self, **kwargs):
         self.params = kwargs.get('params')
         self.db_name = kwargs.get('db_name')  # db to connect
@@ -68,7 +68,7 @@ class Parameters(object):
         return refs
 
 
-class ModelConfig(object):
+class ModelConfig:
     def __init__(self, app_name, model_name):
         self.app_name = app_name
         self.model_name = model_name
@@ -150,7 +150,7 @@ class ModelConfig(object):
         return True
 
 
-class ModelObject(object):
+class ModelObject:
     def __init__(self, app_label, model_name, db_name, pk=None):
         self.db_name = db_name
         self.model_config = ModelConfig(app_label, model_name)
@@ -202,7 +202,7 @@ class ModelObject(object):
         return self.instance.delete()
 
 
-class ModelBuilder(object):
+class ModelBuilder:
     _QUERYSET_OPTS = [
         ('exclude', 'exclude', dict),
         ('distinct', 'distinct', bool),
